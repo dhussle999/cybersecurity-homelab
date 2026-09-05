@@ -1,0 +1,36 @@
+# Secrets and authentication
+credentials.json
+token.json
+*.pem
+*.key
+*.p12
+*.pfx
+.env
+.env.*
+secrets/
+
+# Backups, databases, and logs
+*.tar
+*.tar.gz
+*.zip
+*.db
+*.sqlite*
+*.log
+backups/
+
+# Python and editors
+__pycache__/
+*.py[cod]
+.venv/
+.idea/
+.vscode/
+.DS_Store
+
+# Media
+*.mkv
+*.mp4
+*.avi
+*.mov
+*.mp3
+*.flac
+
