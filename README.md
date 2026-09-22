@@ -24,6 +24,10 @@ flowchart TD
     Docker --> Plex["Plex"]
     Docker --> AdGuard["AdGuard Home"]
     Docker --> Portainer["Portainer"]
+    Host --> KVM["KVM / libvirt"]
+    KVM --> Windows["Windows VM"]
+    Host --> Cockpit["Cockpit virtual-machine management"]
+    Cockpit --> KVM
     Host --> Backup["External backup storage"]
 ```
 
@@ -37,6 +41,8 @@ flowchart TD
 | AdGuard Home | Network DNS filtering | Local network exposure and controlled administration |
 | Portainer | Container administration | Strong authentication and private access |
 | Tailscale | Remote administration | Identity-based encrypted connectivity |
+| KVM / libvirt | Windows VM virtualization | VM lifecycle managed on Ubuntu |
+| Cockpit / cockpit-machines | Browser-based VM management | Authenticated administrative access |
 
 ## Security decisions
 
@@ -74,7 +80,23 @@ Developed a Python workflow using OAuth 2.0 and the Gmail API. The program
 paginates through message results, categorizes unread mail by age, previews the
 impact, and performs batched label modifications.
 
-### 5. Migration backup planning
+### 5. Windows virtualization with KVM and Cockpit
+
+Installed KVM/libvirt and Cockpit with the virtual-machines extension on the
+Ubuntu host, then created a Windows VM. This lets the host keep running its
+Docker services while providing a separate Windows learning environment.
+VM network isolation and guest configuration are still to be documented.
+
+### 6. CPU clock troubleshooting and BIOS recovery
+
+Investigated an Intel Core Ultra 5 250K Plus stuck near 400 MHz even under
+load. Checked temperatures and CPU telemetry, then updated the Gigabyte
+B860 DS3H WIFI6E rev. 1.0 BIOS with Q-Flash. A repeat load test showed
+approximately 4.6–5.1 GHz at 100% busy. See
+[the troubleshooting record](docs/cpu-bios-troubleshooting.md) for evidence
+and steps.
+
+### 7. Migration backup planning
 
 Created a Bash workflow that inventories the system, pauses containers for a
 consistent data snapshot, backs up volumes and bind mounts, restarts services,
@@ -91,13 +113,16 @@ copies media, and generates SHA-256 checksums.
   exposure to unsolicited internet traffic.
 - Automation that can delete data needs safe defaults and an explicit execution
   boundary.
+- Check actual frequency under load before assuming a slow UI is caused by
+  software; compare measurements before and after a firmware change.
 
 ## Roadmap
 
 - [ ] Add a UPS and automatic graceful shutdown
 - [ ] Configure automated security updates and alerting
 - [ ] Add centralized monitoring and uptime dashboards
-- [ ] Deploy an isolated Windows learning VM
+- [x] Create a Windows VM with KVM and Cockpit
+- [ ] Document Windows VM networking and verify isolation before risky testing
 - [ ] Add Wazuh or another SIEM for endpoint telemetry
 - [ ] Create detection rules and document a simulated incident
 - [ ] Test a full restore onto a clean virtual machine
@@ -110,6 +135,7 @@ copies media, and generates SHA-256 checksums.
 ├── SECURITY.md
 ├── docs
 │   ├── architecture.md
+│   ├── cpu-bios-troubleshooting.md
 │   └── portfolio-talking-points.md
 └── .gitignore
 ```
