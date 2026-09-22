@@ -8,10 +8,6 @@
 - **Initial BIOS:** F10, as reported during troubleshooting
 - **Symptom:** A slow desktop and a sustained CPU clock near 400 MHz under load
 
-This record documents the measurements and observed recovery. The version shown
-after the BIOS update was not captured in this record, so the updated firmware
-version is not asserted here.
-
 ## Diagnosis
 
 1. Checked CPU and thermal telemetry. Under sustained CPU load, `turbostat`
