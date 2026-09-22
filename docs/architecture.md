@@ -5,7 +5,9 @@
 The homelab provides continuously available household services while creating
 a controlled environment for infrastructure and defensive-security learning.
 Ubuntu runs directly on the hardware. Long-running applications use Docker,
-while higher-risk learning workloads are planned for isolated virtual machines.
+while KVM/libvirt runs a Windows VM managed with Cockpit. Isolation for any
+higher-risk learning workloads remains a future task; VM networking has not yet
+been verified for those workloads.
 
 ## Trust boundaries
 
@@ -16,7 +18,14 @@ while higher-risk learning workloads are planned for isolated virtual machines.
 | Container to host | Excessive container privilege | Minimal mounts, avoid privileged mode, controlled capabilities |
 | DNS clients to AdGuard | Service outage affects browsing | Stable addressing, restart policy, documented recovery |
 | Server to backup disk | Ransomware or operator error | Separate physical disk, offline storage, integrity checks |
-| Lab VM to trusted LAN | Malware escape or lateral movement | Isolated virtual network and snapshots |
+| Lab VM to trusted LAN | Malware escape or lateral movement | Configure and verify an isolated virtual network and snapshots before risky tests |
+
+## Virtualization
+
+Ubuntu remains the physical host. KVM/libvirt provides virtual machines and
+Cockpit with cockpit-machines provides browser-based VM management. A Windows VM
+has been created for learning. Its boot state, guest configuration, and network
+isolation have not yet been documented or verified in this repository.
 
 ## Data classifications
 
