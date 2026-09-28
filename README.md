@@ -120,7 +120,7 @@ copies media, and generates SHA-256 checksums.
 
 - [ ] Add a UPS and automatic graceful shutdown
 - [ ] Configure automated security updates and alerting
-- [ ] Add centralized monitoring and uptime dashboards
+- [ ] Add centralized monitoring and uptime dashboards ([Grafana project design](docs/grafana-monitoring-detection.md))
 - [x] Create a Windows VM with KVM and Cockpit
 - [ ] Document Windows VM networking and verify isolation before risky testing
 - [ ] Add Wazuh or another SIEM for endpoint telemetry
@@ -136,6 +136,7 @@ copies media, and generates SHA-256 checksums.
 ├── docs
 │   ├── architecture.md
 │   ├── cpu-bios-troubleshooting.md
+│   ├── grafana-monitoring-detection.md
 │   └── portfolio-talking-points.md
 └── .gitignore
 ```
