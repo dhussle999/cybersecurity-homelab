@@ -28,6 +28,9 @@ flowchart TD
     KVM --> Windows["Windows VM"]
     Host --> Cockpit["Cockpit virtual-machine management"]
     Cockpit --> KVM
+    Host --> NE["node-exporter host metrics"]
+    NE --> Prom["Prometheus"]
+    Prom --> Grafana["Grafana Ubuntu Host Overview"]
     Host --> Backup["External backup storage"]
 ```
 
@@ -43,6 +46,9 @@ flowchart TD
 | Tailscale | Remote administration | Identity-based encrypted connectivity |
 | KVM / libvirt | Windows VM virtualization | VM lifecycle managed on Ubuntu |
 | Cockpit / cockpit-machines | Browser-based VM management | Authenticated administrative access |
+| node-exporter | Ubuntu host metrics | Host CPU, memory, filesystem, network, and uptime telemetry |
+| Prometheus | Metrics collection and querying | Scrapes node-exporter for host monitoring |
+| Grafana | Host monitoring dashboards | Working Ubuntu Host Overview dashboard |
 
 ## Security decisions
 
@@ -102,6 +108,18 @@ Created a Bash workflow that inventories the system, pauses containers for a
 consistent data snapshot, backs up volumes and bind mounts, restarts services,
 copies media, and generates SHA-256 checksums.
 
+### 8. Ubuntu host monitoring with Grafana and Prometheus
+
+Deployed Grafana, Prometheus, and node-exporter through Docker and brought the
+Ubuntu Host Overview dashboard online. The dashboard displays CPU usage,
+memory, filesystem usage, network traffic, uptime, load, and exporter health.
+Troubleshot initially blank dashboard panels until host metrics displayed.
+
+This completes the initial host monitoring milestone. Service availability
+probes, delivered alert notifications, centralized logs, and a simulated
+security incident remain future work. See the
+[monitoring and log-detection project](docs/grafana-monitoring-detection.md).
+
 ## Lessons learned
 
 - Container deletion is harmless only when important state is stored outside
@@ -120,7 +138,10 @@ copies media, and generates SHA-256 checksums.
 
 - [ ] Add a UPS and automatic graceful shutdown
 - [ ] Configure automated security updates and alerting
-- [ ] Add centralized monitoring and uptime dashboards ([Grafana project design](docs/grafana-monitoring-detection.md))
+- [x] Deploy Prometheus, node-exporter, and Grafana with a working Ubuntu host dashboard
+- [ ] Extend monitoring to DNS/app availability and validate alert delivery ([project guide](docs/grafana-monitoring-detection.md))
+- [ ] Add centralized logs and validate an SSH-failure detection exercise
+- [ ] Configure automatic VM snapshot rotation
 - [x] Create a Windows VM with KVM and Cockpit
 - [ ] Document Windows VM networking and verify isolation before risky testing
 - [ ] Add Wazuh or another SIEM for endpoint telemetry
