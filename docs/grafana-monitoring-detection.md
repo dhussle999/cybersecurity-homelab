@@ -1,10 +1,23 @@
 # Grafana monitoring and log-detection project
 
-**Status:** design documented; deployment, alert delivery, and exercise evidence pending.
+**Status:** Grafana, Prometheus, and node-exporter deployed in Docker; Ubuntu Host Overview dashboard working based on the completed lab setup. Service probes, centralized logs, alert delivery, and detection-exercise evidence remain pending.
+
+## Completed host monitoring milestone
+
+The Ubuntu Host Overview dashboard now displays CPU, memory, filesystem,
+network, uptime, load, and exporter-health metrics from Prometheus and
+node-exporter. Initially blank panels were troubleshot until metrics displayed.
+This status records the completed lab setup; no live server inspection was
+performed for this documentation update.
+
+The host dashboard is complete as an initial milestone. Blackbox exporter,
+cAdvisor, Loki, Alloy, notification delivery, and the simulated incident below
+are planned extensions. Exact deployed versions, a sanitized dashboard export,
+and a tested monitoring restore remain documentation follow-ups.
 
 ## Goal and scope
 
-Build a free, local dashboard and a small detection workflow on the Ubuntu host. Keep household DNS, Plex, Portainer, KVM, and remote access observable without claiming a full SIEM deployment. Recent lab notes show a draft Prometheus/node-exporter Compose configuration, but its running state has not been verified. Reuse those containers if present; avoid deploying a duplicate stack.
+Build a free, local dashboard and a small detection workflow on the Ubuntu host. Keep household DNS, Plex, Portainer, KVM, and remote access observable without claiming a full SIEM deployment. The existing Grafana, Prometheus, and node-exporter containers provide working Ubuntu host monitoring. Reuse this stack when adding service probes and log collection.
 
 ```mermaid
 flowchart LR
@@ -74,7 +87,7 @@ Do not disconnect household DNS, restart services, or place a malware VM on the 
 - Export or screenshot a sanitized dashboard showing host, DNS, and app probes; record a short baseline and one verified outage or safe test probe failure.
 - Save the alert definition, query, test notification result, and the simulated incident timeline with private details removed.
 - Record actual software versions, container/volume layout, and a tested restore path for Grafana, Prometheus, and Loki configuration/data.
-- Only then mark monitoring and the detection exercise complete in the README. Call the project **centralized monitoring and log detection**; reserve **SIEM deployed** for a later, actually verified SIEM implementation.
+- Track milestones separately: the working host dashboard is complete; service availability, delivered alerts, and the detection exercise require their own evidence before being marked complete. Call the project **centralized monitoring and log detection**; reserve **SIEM deployed** for a later, actually verified SIEM implementation.
 
 **Operational follow-up:** Set up automatic snapshot rotation for the Windows/lab VMs once the backup and recovery plan is verified. The user requested a reminder at the next homelab project.
 
