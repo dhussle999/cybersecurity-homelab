@@ -7,7 +7,8 @@ I use Tailscale for private remote administration, AdGuard Home for DNS filterin
 Portainer for container visibility, and Plex for personal media management. I
 designed persistent storage and backup procedures so applications can be rebuilt
 without losing their state. I also installed KVM/libvirt and Cockpit and created
-a Windows VM on the Ubuntu host.
+a Windows VM on the Ubuntu host. I deployed Prometheus, node-exporter, and
+Grafana in Docker and brought an Ubuntu Host Overview dashboard online.
 
 ## Describe a hardware troubleshooting problem
 
@@ -39,9 +40,22 @@ inventory, temporarily stops stateful containers, captures Docker volumes and
 bind mounts, restarts services, copies media to a separate physical disk, and
 generates SHA-256 checksums. My next step is testing restoration onto a clean VM.
 
+## Describe your monitoring project
+
+I use node-exporter to expose Ubuntu host metrics, Prometheus to collect and
+query them, and Grafana to visualize CPU, memory, disk, network, uptime, load,
+and exporter health. I troubleshot initially blank panels and got the Ubuntu
+Host Overview dashboard displaying host metrics. This gives me a baseline for
+resource pressure and host health. Service probes, alert delivery, centralized
+logs, and a documented detection exercise are the next milestones; I do not
+present them as completed.
+
 ## What would you improve next?
 
-I would add power-loss protection, automated patching, centralized monitoring,
-and a SIEM. I plan to verify isolation for the Windows VM before risky testing and keep
-future malware-analysis VMs separate from the trusted household network and document detection and response exercises.
+I would extend the working host dashboard with DNS and application availability
+probes, tested alert notifications, and centralized logs. Automated security
+updates, graceful shutdown on power loss, VM snapshot rotation, and a SIEM
+remain follow-up work. I plan to verify Windows VM isolation before risky
+testing, keep future malware-analysis VMs separate from the trusted household
+network, and document a detection and response exercise.
 
