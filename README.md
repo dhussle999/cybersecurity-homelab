@@ -31,6 +31,7 @@ flowchart TD
     Host --> NE["node-exporter host metrics"]
     NE --> Prom["Prometheus"]
     Prom --> Grafana["Grafana Ubuntu Host Overview"]
+    Host --> Homarr["Homarr dashboard — setup in progress"]
     Host --> Backup["External backup storage"]
 ```
 
@@ -120,6 +121,18 @@ probes, delivered alert notifications, centralized logs, and a simulated
 security incident remain future work. See the
 [monitoring and log-detection project](docs/grafana-monitoring-detection.md).
 
+### 9. Homarr dashboard setup (in progress)
+
+Installed Homarr to create a central dashboard for navigating the homelab's
+services. Initial work has focused on account access and locating the existing
+credential configuration while troubleshooting login.
+
+The next milestone is to organize service links and validate integrations for
+the lab's applications and monitoring tools. Installation is recorded as
+progress; successful login, completed integrations, and dashboard coverage
+remain to be verified. Credentials and credential files are excluded from
+public documentation.
+
 ## Lessons learned
 
 - Container deletion is harmless only when important state is stored outside
@@ -135,6 +148,10 @@ security incident remain future work. See the
   software; compare measurements before and after a firmware change.
 
 ## Roadmap
+
+- [x] Install Homarr for a central homelab dashboard
+- [ ] Verify Homarr login and organize service links
+- [ ] Configure and validate Homarr integrations
 
 - [ ] Add a UPS and automatic graceful shutdown
 - [ ] Configure automated security updates and alerting
