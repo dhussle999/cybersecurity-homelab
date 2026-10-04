@@ -1,4 +1,4 @@
-# Secure Ubuntu Homelab
+# VIKI — Secure Ubuntu Homelab
 
 ![Status](https://img.shields.io/badge/status-active-success)
 ![Platform](https://img.shields.io/badge/platform-Ubuntu-E95420)
@@ -17,7 +17,7 @@ remote access, and recovery planning.
 ```mermaid
 flowchart TD
     Internet --> Router["Home router"]
-    Router --> Host["Ubuntu server"]
+    Router --> Host["VIKI Ubuntu server"]
     Remote["Authorized remote devices"] --> TS["Tailscale encrypted network"]
     TS --> Host
     Host --> Docker["Docker Engine"]
@@ -32,7 +32,8 @@ flowchart TD
     NE --> Prom["Prometheus"]
     Prom --> Grafana["Grafana Ubuntu Host Overview"]
     Host --> Homarr["Homarr dashboard — setup in progress"]
-    Host --> Backup["External backup storage"]
+    Host --> Backup["Encrypted Restic repository — daily timer enabled"]
+    Backup --> Phone["Android phone copy — automation validation pending"]
 ```
 
 ## Implemented services
@@ -133,6 +134,23 @@ progress; successful login, completed integrations, and dashboard coverage
 remain to be verified. Credentials and credential files are excluded from
 public documentation.
 
+### 10. Encrypted daily backups and recovery troubleshooting
+
+Built a Restic backup workflow for application state, Windows VM disks, host
+configuration, and selected personal data. A successful server backup enabled
+the daily systemd timer for 03:00 America/Chicago. An Android phone running
+Termux provides a separate backup destination over SSH.
+
+Troubleshot a Windows shutdown timeout by configuring the QEMU guest agent.
+Investigated file read errors using kernel logs and SMART data, identified a
+failing legacy HDD, and excluded it from routine backups. The phone created a
+verified generation, then failed during the second synchronization because
+hard-link creation was denied. A normal-copy workaround has been provided;
+its result and final phone scheduling remain unconfirmed.
+
+See [the backup project and troubleshooting record](docs/viki-backup-recovery.md)
+for scope, evidence, limitations, and the planned 1 TB NVMe and iCloud copies.
+
 ## Lessons learned
 
 - Container deletion is harmless only when important state is stored outside
@@ -148,6 +166,15 @@ public documentation.
   software; compare measurements before and after a firmware change.
 
 ## Roadmap
+
+- [x] Complete an encrypted server backup and enable the daily systemd timer
+- [x] Configure and validate the Windows QEMU guest agent
+- [x] Diagnose the failing legacy HDD and exclude it from routine backups
+- [ ] Validate the phone copy workaround and automatic transfer schedule
+- [ ] Complete Termux:Boot setup and test recovery after a phone reboot
+- [ ] Test file and application restoration from the phone repository
+- [ ] Add a 1 TB NVMe as a parallel local backup destination
+- [ ] Add an encrypted VIKI offsite copy in iCloud and verify restoration
 
 - [x] Install Homarr for a central homelab dashboard
 - [ ] Verify Homarr login and organize service links
@@ -173,6 +200,7 @@ public documentation.
 ├── SECURITY.md
 ├── docs
 │   ├── architecture.md
+│   ├── viki-backup-recovery.md
 │   ├── cpu-bios-troubleshooting.md
 │   ├── grafana-monitoring-detection.md
 │   └── portfolio-talking-points.md

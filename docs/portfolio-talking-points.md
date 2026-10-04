@@ -2,7 +2,7 @@
 
 ## Tell me about your homelab
 
-I built a bare-metal Ubuntu server that runs continuous services through Docker.
+I built VIKI, a bare-metal Ubuntu server that runs continuous services through Docker.
 I use Tailscale for private remote administration, AdGuard Home for DNS filtering,
 Portainer for container visibility, and Plex for personal media management. I
 designed persistent storage and backup procedures so applications can be rebuilt
@@ -35,10 +35,19 @@ automation as a safety problem, not only a coding problem.
 
 ## How do you approach backups?
 
-I distinguish synchronization from recovery. My migration workflow records an
-inventory, temporarily stops stateful containers, captures Docker volumes and
-bind mounts, restarts services, copies media to a separate physical disk, and
-generates SHA-256 checksums. My next step is testing restoration onto a clean VM.
+I implemented an encrypted Restic workflow for Docker application state,
+Windows VM disks, host configuration, and selected personal data. A successful
+server run enabled a daily systemd timer. I use an Android phone with Termux as
+a separate destination and designed verification before replacing the previous
+copy or permitting retention cleanup.
+
+I diagnosed a Windows shutdown timeout, configured the QEMU guest agent, and
+confirmed guest communication. When personal-file backups encountered I/O
+errors, I correlated kernel medium errors with SMART pending sectors and
+excluded the failing HDD. Phone automation remains under validation after a
+hard-link permission failure; the proposed normal-copy fix, reboot startup,
+and actual restore tests are still pending. A parallel NVMe copy and encrypted
+offsite copy are planned. See [the project record](viki-backup-recovery.md).
 
 ## Describe your monitoring project
 

@@ -1,4 +1,4 @@
-# Architecture and threat model
+# VIKI architecture and threat model
 
 ## Design objective
 
@@ -17,15 +17,15 @@ been verified for those workloads.
 | Remote device to server | Lost or compromised device | Tailscale identity, device removal, SSH authentication |
 | Container to host | Excessive container privilege | Minimal mounts, avoid privileged mode, controlled capabilities |
 | DNS clients to AdGuard | Service outage affects browsing | Stable addressing, restart policy, documented recovery |
-| Server to backup disk | Ransomware or operator error | Separate physical disk, offline storage, integrity checks |
+| Server to phone backup | Ransomware, operator error, interrupted transfer | Encrypted repository, separate device, verification before promotion; automation validation pending |
 | Lab VM to trusted LAN | Malware escape or lateral movement | Configure and verify an isolated virtual network and snapshots before risky tests |
 
 ## Virtualization
 
 Ubuntu remains the physical host. KVM/libvirt provides virtual machines and
 Cockpit with cockpit-machines provides browser-based VM management. A Windows VM
-has been created for learning. Its boot state, guest configuration, and network
-isolation have not yet been documented or verified in this repository.
+has been created for learning. The QEMU guest agent is configured and responds to guest-ping for backup
+lifecycle management. Network isolation remains unverified for risky workloads.
 
 ## Data classifications
 
@@ -38,10 +38,20 @@ Only public material belongs in GitHub.
 
 ## Recovery strategy
 
-1. Record service definitions and storage mappings.
-2. Stop stateful containers during configuration snapshots.
-3. Back up named volumes, bind mounts, media, and selected host configuration.
-4. Restart services even when the backup workflow exits unexpectedly.
-5. Generate SHA-256 hashes and verify them from the destination disk.
-6. Perform a test restoration before depending on the backup for migration.
+The server creates encrypted Restic snapshots and has a daily systemd timer
+enabled for 03:00 America/Chicago. Backup scope includes consistent application
+data, file-backed VM storage and recovery metadata, host configuration, and
+selected personal data on healthy storage. Containers and initially running VMs
+are restarted after their backup stages.
 
+The phone workflow pulls the encrypted repository over SSH, performs a full
+Restic data check, and promotes the candidate only after required snapshots
+are present. Retention is designed to run after phone acknowledgment. The first
+verified phone generation exists, but the second synchronization encountered a
+hard-link permission error; final automation and reboot startup remain pending.
+
+The failing legacy HDD is excluded. Its data is outside current routine backup
+coverage. A 1 TB NVMe parallel local copy and an encrypted offsite iCloud copy
+are planned. Neither offsite coverage nor a tested full restore is complete.
+
+See [the detailed recovery project](viki-backup-recovery.md).
