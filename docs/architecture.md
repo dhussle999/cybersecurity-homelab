@@ -17,7 +17,7 @@ been verified for those workloads.
 | Remote device to server | Lost or compromised device | Tailscale identity, device removal, SSH authentication |
 | Container to host | Excessive container privilege | Minimal mounts, avoid privileged mode, controlled capabilities |
 | DNS clients to AdGuard | Service outage affects browsing | Stable addressing, restart policy, documented recovery |
-| Server to phone backup | Ransomware, operator error, interrupted transfer | Encrypted repository, separate device, verification before promotion; automation validation pending |
+| Server to SSD backup | Wrong disk, absent destination, data loss, host compromise | Explicit disk identification and erase confirmation, UUID/partition checks before writes, encrypted snapshots, integrity and restore verification; independent/offsite coverage still needed |
 | Lab VM to trusted LAN | Malware escape or lateral movement | Configure and verify an isolated virtual network and snapshots before risky tests |
 
 ## Virtualization
@@ -38,20 +38,37 @@ Only public material belongs in GitHub.
 
 ## Recovery strategy
 
-The server creates encrypted Restic snapshots and has a daily systemd timer
-enabled for 03:00 America/Chicago. Backup scope includes consistent application
-data, file-backed VM storage and recovery metadata, host configuration, and
-selected personal data on healthy storage. Containers and initially running VMs
-are restarted after their backup stages.
+Encrypted Restic snapshots now go directly to SSD1 at /mnt/viki-backup,
+mounted persistently by UUID. The existing service and timer run daily at
+03:00 America/Chicago. The job checks the expected UUID, filesystem, and
+physical partition before any backup writes and refuses to start below
+20 GiB free. A missing-mount test verified refusal.
 
-The phone workflow pulls the encrypted repository over SSH, performs a full
-Restic data check, and promotes the candidate only after required snapshots
-are present. Retention is designed to run after phone acknowledgment. The first
-verified phone generation exists, but the second synchronization encountered a
-hard-link permission error; final automation and reboot startup remain pending.
+Scope includes application configuration and persistent state, Compose files,
+Home Assistant, host configuration and personal files, and supported VM disks,
+definitions, NVRAM, and TPM state. Application databases are copied while
+their containers are stopped; Immich additionally has a logical PostgreSQL
+dump. VM disks are copied only while shut down, with initially running guests
+restarted after their stage.
 
-The failing legacy HDD is excluded. Its data is outside current routine backup
-coverage. A 1 TB NVMe parallel local copy and an encrypted offsite iCloud copy
-are planned. Neither offsite coverage nor a tested full restore is complete.
+The first repository used approximately 32 GiB. Full data integrity checking
+and seven representative restores passed. Retention keeps 7 daily, 4 weekly,
+and 2 monthly snapshots per host/tag group, with previews before deletion and
+pruning. Complete application recovery and a restored VM boot remain untested,
+as does the first unattended SSD run following migration.
+
+The failing legacy drive is entirely excluded. SSD1 passed its extended test
+but has historical errors and SMART log warnings. An SSD in the same host
+shares exposure to compromise, theft, and power incidents; encryption does
+not provide immutable or offsite protection.
+
+The previous repository and phone copy are preserved for older files.
+Server-side phone-transfer access was retired after SSD verification;
+phone-side cron and boot-script removal commands were provided but their
+execution is unconfirmed. The password must be preserved separately.
+
+A larger NVMe backup destination and an encrypted iCloud copy remain planned.
+This is a local file/application backup, not a bare-metal image or a complete
+3-2-1 backup.
 
 See [the detailed recovery project](viki-backup-recovery.md).
