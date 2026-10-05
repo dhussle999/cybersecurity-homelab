@@ -35,19 +35,33 @@ automation as a safety problem, not only a coding problem.
 
 ## How do you approach backups?
 
-I implemented an encrypted Restic workflow for Docker application state,
-Windows VM disks, host configuration, and selected personal data. A successful
-server run enabled a daily systemd timer. I use an Android phone with Termux as
-a separate destination and designed verification before replacing the previous
-copy or permitting retention cleanup.
+I implemented daily encrypted Restic backups to a dedicated SSD partition,
+covering Docker application state, Compose files, Home Assistant, personal
+files, and Windows VM disks and recovery metadata. I identified the disk
+through its model, serial, partition, and mount rather than assuming a device
+name. I checked dependencies, capacity, and SMART health, obtained explicit
+erase confirmation, and mounted the reformatted partition by UUID.
 
-I diagnosed a Windows shutdown timeout, configured the QEMU guest agent, and
-confirmed guest communication. When personal-file backups encountered I/O
-errors, I correlated kernel medium errors with SMART pending sectors and
-excluded the failing HDD. Phone automation remains under validation after a
-hard-link permission failure; the proposed normal-copy fix, reboot startup,
-and actual restore tests are still pending. A parallel NVMe copy and encrypted
-offsite copy are planned. See [the project record](viki-backup-recovery.md).
+The existing systemd timer runs at 3 AM America/Chicago. Backup jobs check the
+expected mount and physical partition before writing; I verified that a missing
+destination causes refusal. I use stopped application database copies plus
+an Immich PostgreSQL logical export, and copy VM disks only while shut down.
+
+The initial repository used about 32 GiB with about 184 GiB available. Full
+repository data verification passed, and seven representative restores matched
+recorded SHA-256 hashes. Retention keeps 7 daily, 4 weekly, and 2 monthly
+snapshots per group, with previews before pruning.
+
+I previously diagnosed a Windows shutdown timeout and configured the guest
+agent. I also investigated personal-file I/O errors and excluded a failing
+legacy drive. The unfinished phone-transfer design was replaced by the SSD
+destination; old backups and passwords remain useful for unique older files.
+
+I distinguish verified file restores from full recovery: an application
+recovery rehearsal, restored VM boot, first unattended SSD run, and independent
+offsite coverage remain work to do. SSD1 passed its extended test but retains
+historical errors, which makes another healthy backup especially important.
+See [the project record](viki-backup-recovery.md).
 
 ## Describe your monitoring project
 
