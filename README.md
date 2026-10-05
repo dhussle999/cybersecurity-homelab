@@ -32,8 +32,8 @@ flowchart TD
     NE --> Prom["Prometheus"]
     Prom --> Grafana["Grafana Ubuntu Host Overview"]
     Host --> Homarr["Homarr dashboard — setup in progress"]
-    Host --> Backup["Encrypted Restic repository — daily timer enabled"]
-    Backup --> Phone["Android phone copy — automation validation pending"]
+    Host --> Backup["Encrypted Restic backups — daily at 3 AM"]
+    Backup --> SSD1["SSD1 ext4 repository — integrity and sample restores verified"]
 ```
 
 ## Implemented services
@@ -134,22 +134,35 @@ progress; successful login, completed integrations, and dashboard coverage
 remain to be verified. Credentials and credential files are excluded from
 public documentation.
 
-### 10. Encrypted daily backups and recovery troubleshooting
+### 10. Verified encrypted daily SSD backups
 
-Built a Restic backup workflow for application state, Windows VM disks, host
-configuration, and selected personal data. A successful server backup enabled
-the daily systemd timer for 03:00 America/Chicago. An Android phone running
-Termux provides a separate backup destination over SSH.
+Migrated the unfinished phone backup destination to SSD1 after identifying the
+physical disk and partition, checking dependencies and capacity, obtaining
+explicit erase confirmation, and completing an extended SMART test. The
+existing main partition now uses ext4 and mounts at /mnt/viki-backup by UUID.
+The existing systemd service and timer run daily at 03:00 America/Chicago.
 
-Troubleshot a Windows shutdown timeout by configuring the QEMU guest agent.
-Investigated file read errors using kernel logs and SMART data, identified a
-failing legacy HDD, and excluded it from routine backups. The phone created a
-verified generation, then failed during the second synchronization because
-hard-link creation was denied. A normal-copy workaround has been provided;
-its result and final phone scheduling remain unconfirmed.
+The initial encrypted repository used approximately 32 GiB, leaving about
+184 GiB available. Retention keeps 7 daily, 4 weekly, and 2 monthly snapshots
+per backup group. Integrity checks read all repository data, and seven
+representative restores matched their recorded hashes. A missing-disk test
+proved that jobs refuse to write when the expected destination is absent.
 
-See [the backup project and troubleshooting record](docs/viki-backup-recovery.md)
-for scope, evidence, limitations, and the planned 1 TB NVMe and iCloud copies.
+Coverage includes application configuration, Compose files, persistent app
+data, Home Assistant, personal files, and Windows VM storage and definitions.
+Databases are captured while applications are stopped, with an additional
+Immich PostgreSQL logical dump. VM disks are copied only while shut down.
+The failing second drive remains excluded. SSD1 passed its extended test but
+retains historical errors, so independent backup coverage remains important.
+
+Server-side phone-transfer access was retired after SSD verification; removal
+of the phone-side schedule is not confirmed. Previous backups are preserved
+for potentially unique older files. This is local file/application backup,
+not a bare-metal image or a complete 3-2-1 setup. Application recovery, VM boot
+verification, and the first unattended SSD run remain to be tested.
+
+See [the backup and recovery record](docs/viki-backup-recovery.md) for scope,
+exclusions, restore instructions, and remaining work.
 
 ## Lessons learned
 
@@ -170,9 +183,14 @@ for scope, evidence, limitations, and the planned 1 TB NVMe and iCloud copies.
 - [x] Complete an encrypted server backup and enable the daily systemd timer
 - [x] Configure and validate the Windows QEMU guest agent
 - [x] Diagnose the failing legacy HDD and exclude it from routine backups
-- [ ] Validate the phone copy workaround and automatic transfer schedule
-- [ ] Complete Termux:Boot setup and test recovery after a phone reboot
-- [ ] Test file and application restoration from the phone repository
+- [x] Migrate the backup destination to SSD1 with an explicit disk erase confirmation
+- [x] Verify full repository integrity and seven representative file restores
+- [x] Validate missing-disk refusal and configure retention with pruning previews
+- [x] Retire server-side phone-transfer access after SSD verification
+- [ ] Observe the first unattended SSD backup and confirm phone-side schedule removal
+- [ ] Preserve the password independently and review old phone backups for unique files
+- [ ] Test full application recovery and a restored VM boot
+- [ ] Monitor SSD1 health and establish another healthy independent backup
 - [ ] Add a 1 TB NVMe as a parallel local backup destination
 - [ ] Add an encrypted VIKI offsite copy in iCloud and verify restoration
 
