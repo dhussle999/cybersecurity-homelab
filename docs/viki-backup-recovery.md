@@ -1,135 +1,196 @@
-# VIKI encrypted backups and recovery troubleshooting
+# VIKI encrypted SSD backups and recovery
 
-Status recorded: 2026-10-04. This record separates observed outcomes from
-intended automation. Addresses, account names, device serials, VM identifiers,
-passwords, and personal filenames are omitted.
+Status verified: 2026-10-05. Public documentation omits credentials, addresses,
+account names, disk serials and UUIDs, VM identifiers, and personal filenames.
 
-## Objective and current status
+## Current status
 
-Use an existing 512 GB Android phone as a separate encrypted backup destination
-for the Ubuntu homelab, with repeatable backup stages and recovery checks.
+VIKI now writes encrypted Restic backups directly to SSD1 instead of depending
+on the unfinished Android phone-transfer workflow.
 
-| Milestone | Evidence and status |
+| Item | Verified configuration or result |
 | --- | --- |
-| Initial application archive transfer | Two dated archive sets totaling approximately 4.29 GB transferred to the phone; checksum results were not recorded |
-| Encrypted server backup | Installer progressed past its successful first server run |
-| Daily server schedule | systemd timer enabled for 03:00 America/Chicago |
-| Windows guest agent | guest-ping returned an empty success response |
-| Failing HDD exclusion | Updated backup scope excludes the legacy drive and recovery-image directory |
-| Phone repository | A verified generation was created; the second synchronization failed while creating hard links |
-| Phone workaround | Normal-copy replacement provided; execution and successful retry not confirmed |
-| Phone cron and reboot startup | Final installer success and Termux:Boot startup test not confirmed |
-| Restore testing | File, application, and full-system restoration still pending |
-| NVMe and offsite copies | Planned, not implemented |
+| Destination | Existing main partition on a 240 GB SATA SSD, formatted as ext4 |
+| Mount | /mnt/viki-backup, persisted in fstab using the filesystem UUID |
+| Repository | /mnt/viki-backup/repository |
+| Schedule | Existing viki-backup.service and viki-backup.timer; daily at 03:00 America/Chicago |
+| Retention | 7 daily, 4 weekly, 2 monthly snapshots per host/tag group |
+| Initial repository | Approximately 32 GiB, with approximately 184 GiB available |
+| Integrity | Full encrypted repository data check passed |
+| Restore checks | Seven representative files restored to a private temporary directory and matched recorded SHA-256 hashes |
+| Missing destination | A private mount-namespace test proved that an absent disk causes refusal before backup writes |
+| Running services | Applications resumed; the Windows VM retained its initially shut-off state |
+| Phone workflow | Server-side transfer access retired after SSD verification; phone-side schedule removal commands supplied, execution unconfirmed |
 
-## Backup design
+The first SSD backup was run and verified manually. The adapted timer is
+enabled and active; its next scheduled run still needs observation. This is
+local file/application backup, not a bootable bare-metal image or a complete
+3-2-1 backup.
 
-Restic encrypts the repository and stores versioned snapshots. The scope is
-selected recoverable state rather than a bootable whole-disk image.
+## Disk identification and migration controls
 
-| Stage | Included state | Consistency approach |
+Before erasing anything, inventory correlated the SSD mount with the physical
+disk model, serial, capacity, partition, and filesystem UUID. Existing Windows
+folders, space usage, fstab entries, Docker mounts, and backup configuration
+were inspected. The owner explicitly confirmed erasing that specific main
+partition. The other disk and Ubuntu system disk were never formatted, and
+the remaining partitions on SSD1 were retained.
+
+SSD1 reported an overall SMART status of PASSED, zero reallocated sectors,
+116 historical reported uncorrectable errors, and error-log checksum warnings.
+An extended test completed without error, with the error count unchanged.
+That result supported proceeding but does not erase the reliability concern.
+Another independent healthy backup destination and continued monitoring are
+still needed.
+
+A conservative source allocation estimate was checked before formatting.
+The installer safely unmounted the confirmed partition, formatted only that
+partition as ext4, and mounted it by its new UUID. It adapted the existing
+service and timer rather than creating a second schedule.
+
+The job checks the exact mount point, expected UUID, ext4 filesystem, and
+physical partition before creating backup directories, a cache, or a lock.
+It refuses to begin with less than 20 GiB free. These controls prevent an
+absent SSD from redirecting backups into a directory on the system disk.
+
+## Verified backup scope
+
+| Stage | Included state | Consistency method |
 | --- | --- | --- |
-| DNS | AdGuard Home configuration and persistent working data | Briefly stop AdGuard, capture state, restart |
-| Applications | Homarr, Vaultwarden, Plex configuration, Grafana, Prometheus, Immich data/database, Portainer, and service definitions | Stop the containers that were running, capture persistent mounts, restore their running state |
-| Virtual machines | Supported file-backed VM disks, backing chains, VM definitions, and relevant firmware/TPM state | Graceful guest-agent shutdown, capture storage, restart initially running guests |
-| Host and personal data | Host configuration, boot files, administrative scripts, package/service inventory, and selected home/personal folders on healthy storage | File-level capture with explicit exclusions |
+| DNS | AdGuard Home configuration and persistent working data | Stop included application, back up, restore prior running state |
+| Applications | Home Assistant, Vaultwarden, Immich, Homarr, Plex configuration, Grafana, Prometheus, Portainer, and VIKI alert configuration/state | Stop containers with included persistent mounts, capture state, restart those initially running |
+| Database export | Immich PostgreSQL logical SQL dump in addition to the stopped physical database copy | Quiesce the photo application and require a successful nonempty pg_dumpall export |
+| VM | Windows VM disk and supported backing chains, inactive definition, NVRAM, and TPM state | Copy only while shut down; gracefully stop and restart initially running supported guests |
+| Host and personal files | /etc, /boot, /root, /home, /opt, /srv, /usr/local, Compose files, scripts, and recovery inventories | File capture with explicit exclusions |
 
-Disposable caches, virtual filesystems, container sockets, redundant backup
-outputs, the excluded failing drive, and recovery images are omitted. Password
-manager data and configuration secrets stay inside the encrypted backup.
+Unsupported block/network VM storage or detected user-session VMs cause a
+failure rather than an unsupported claim of coverage. A running guest must
+complete graceful shutdown; the workflow does not force a shutdown to obtain
+a disk copy.
 
-The phone authenticates with an SSH key and pulls the encrypted repository with
-rsync. The intended process stages a candidate, runs `restic check --read-data`,
-confirms expected snapshot IDs, then promotes that candidate as the current
-verified copy. A failed candidate should leave the previous verified generation
-available.
+The actual VM was already shut off during the initial SSD backup. Its disk
+data passed the full repository check and its XML was restored, but a complete
+VM restoration and boot have not been tested.
 
-Server retention is designed to wait for acknowledgment from the verified
-phone copy, keeping seven daily restore points per host/tag group and at least
-one latest snapshot. This is not a claim that seven scheduled runs or restores
-have already been tested.
+Personal files can change during the scan; they do not form one atomic
+filesystem-wide snapshot.
 
-## Troubleshooting record
+## Integrity, restores, and retention
 
-### Windows VM shutdown timeout
+The initial backup produced five stage snapshots. Full repository verification
+read all encrypted pack data. Representative restores covered the PostgreSQL
+SQL dump, Vaultwarden database, Home Assistant configuration, VM definition,
+fstab, and two Compose files. Each restored file passed Restic verification
+and matched a SHA-256 hash captured before its backup.
 
-The first server run backed up DNS and applications, then failed because the
-Windows VM did not shut down within 180 seconds. No forced shutdown was used.
-The initial guest-agent probe reported that the agent was not configured.
+Application database import, complete application recovery, and a VM boot
+test remain separate future exercises. Successful file verification does not
+claim those exercises are complete.
 
-A persistent virtio guest-agent channel was attached and Windows guest tools
-were installed. A subsequent guest-ping succeeded. The backup shutdown command
-was changed to explicitly use guest-agent mode. A later server run completed
-and enabled the timer.
+The first repository used approximately 15% of the destination filesystem,
+supporting 7 daily, 4 weekly, and 2 monthly restore points per host/tag group.
+Unchanged data is shared across snapshots. Retention is a policy, not a promise
+that future data growth will fit indefinitely.
 
-### Personal-file I/O errors and failing legacy HDD
+Before removing snapshots, the job saves a forget preview. It then saves a
+prune preview before deleting unreferenced repository data and checks integrity
+afterward. Initial pruning removed nothing. Daily runs check repository
+structure; Sunday runs also read all repository data. Low-space refusal is
+reported as a failure rather than a successful backup.
 
-Restic reported unreadable personal files on the legacy Windows-data drive.
-Kernel logs showed repeated medium errors, unrecovered reads, and UNC/AMNF
-errors at specific sectors. SMART reported ten pending sectors and 1,023 ATA
-errors even though its overall health label read PASSED.
+See the official [Restic retention documentation](https://restic.readthedocs.io/en/stable/060_forget.html)
+and [restore documentation](https://restic.readthedocs.io/en/stable/050_restore.html).
 
-Inventory identified a 250 GB Fujitsu mechanical HDD, despite the mount being
-named as though it were an SSD. These observations supported treating the disk
-as failing. A recovery-image approach was discussed, but completion was not
-confirmed. The chosen operational change was to exclude the drive from routine
-backups and replace it later.
+## Exclusions and remaining gaps
 
-A subsequent run still read that drive, so the updated exclusion needed to be
-applied through the correct installer/server code. The later successful server
-run was observed after this troubleshooting. Exclusion prevents routine backup
-reads; it does not recover unreadable files or protect data remaining only on
-that disk.
+- All data on /mnt/ssd2 and links pointing there, including the personal-photo
+  link and Plex music source. This disk has known read errors.
+- Old Windows data erased from SSD1. Only anything already captured in the
+  preserved previous repository remains protected there.
+- The active repository and its cache, /var/lib/viki-backup, old export and
+  backup folders, previous recovery folders, and temporary restore folders.
+- /proc, /sys, /dev, /run, container sockets, host root mounts exposed to
+  monitoring containers, temporary files, and application/system caches.
+- Ollama model downloads, the Immich machine-learning cache, and llama.cpp
+  build output.
+- Movie and TV media folders.
+- Container images and disposable writable layers; persistent mounted state
+  and Compose configuration are covered.
+- VM installation CD-ROM ISOs and reinstallable firmware packages.
+- An offsite copy, offline/immutable protection, bare-metal recovery image,
+  full application recovery rehearsal, and complete VM boot verification.
 
-### Phone hard-link permission failure
+The local coverage manifest lists exact included paths, exclusion patterns,
+and discovered skipped sources. It is not uploaded publicly.
 
-The phone reached a verified repository generation, then failed during its
-second synchronization. The log showed `cp -al` returning Permission denied
-while cloning repository files into the incoming candidate.
+## Recovery and password preservation
 
-A workaround was provided to replace hard-link cloning with ordinary
-`cp -a` copying in the phone engine and downloaded installer. This requires
-space for another repository copy while verification runs. Free-space output
-and a successful rerun are still needed before marking phone automation
-complete. The verified generation should be preserved during troubleshooting.
+The existing repository password was retained and secured as a root-owned
+file with mode 0600. Keep a separately accessible password-manager entry and
+a secure offline copy. A password stored only inside this encrypted repository
+cannot unlock it during recovery. Do not rely exclusively on a password
+manager running on this same server.
 
-### Installer execution location
+List snapshots:
 
-The installer runs in Termux on the phone and connects to Ubuntu over SSH.
-It must be run from the phone shell using the updated downloaded file. Running
-a stale download can reinstall earlier behavior. A closed SSH connection after
-the server stage is normal when the installer proceeds to the phone transfer.
+```bash
+sudo restic -r /mnt/viki-backup/repository --password-file /etc/viki-backup/password snapshots
+```
 
-## Remaining validation
+Restore a selected snapshot into a separate private directory:
 
-- Confirm sufficient phone space and successful normal-copy synchronization.
-- Confirm the final installer success message, verified marker, and phone cron.
-- Install Termux:Boot from the matching Termux distribution, open it once,
-  configure background operation, and test startup after reboot and unlock.
-- Restore a sample file to a separate directory and compare its contents.
-- Test recovery of a stateful application and a VM without overwriting production.
-- Keep a recoverable copy of the encryption password separate from the repository.
-- Observe a scheduled daily run and phone transfer before relying on unattended operation.
+```bash
+sudo mkdir -m 700 /root/viki-restore
+sudo restic -r /mnt/viki-backup/repository --password-file /etc/viki-backup/password restore SNAPSHOT_ID --target /root/viki-restore --verify
+```
 
-## Planned parallel and offsite copies
+Select all needed stage tags: viki-dns, viki-apps, viki-databases, viki-vms,
+and viki-host-personal. On another Linux host, mount the existing SSD repository
+and supply the independently preserved password. Do not initialize a new
+repository over the existing one.
 
-A future 1 TB NVMe will provide another local backup destination for faster
-recovery and extra capacity. If installed in the same host, it shares exposure
-to host compromise, theft, and power incidents; it does not provide offsite
-protection.
+Stop affected applications before restoring their data to original paths.
+Restore permissions, Compose files, and configuration secrets. PostgreSQL
+recovery can use the stopped physical cluster with a compatible version or
+the logical SQL dump imported into an empty compatible database.
 
-An encrypted VIKI repository copy in iCloud is deferred. Existing iCloud
-photos/documents do not automatically cover the homelab applications and VMs.
-The offsite step requires copying the complete encrypted repository, confirming
-upload completion, preserving the password separately, and testing restoration.
+Restore VM disks and backing files, NVRAM, TPM state, and the saved XML
+definition while the VM is shut down. Define the VM with libvirt after paths
+are restored. Never overwrite a running guest disk.
 
-The 3-2-1 goal is three copies of the same important data, two media types, and
-one offsite copy. Current logs do not establish that goal as complete. Phone
-and NVMe copies provide device diversity, while strict media diversity and an
-offline or immutable recovery copy still need planning.
+## Previous phone backup
+
+The earlier encrypted server repository remains at
+/var/lib/viki-backup/export/repository. The phone previously created a verified
+generation, but its later synchronization encountered a hard-link permission
+failure and final unattended operation was never established.
+
+After SSD verification, the server-side phone-control sudo rule and tagged
+phone SSH key were retired. Exact Termux commands were provided to remove the
+phone cron entry and disable its boot script and launcher. Their execution
+on the phone is not yet confirmed.
+
+Preserve the old phone repository and its password until it has been checked
+for unique older files and another independent backup is established. It may
+contain old Windows personal files that are no longer on the reformatted SSD.
+Keeping it does not establish a current offsite replica.
+
+## Earlier troubleshooting and future work
+
+The original Windows shutdown timeout was resolved by configuring the QEMU
+guest agent and confirming guest communication. Read failures on the other
+legacy drive were investigated through kernel and SMART evidence; that drive
+remains excluded, and unreadable files have not been recovered by this work.
+
+Next steps are to observe the first unattended SSD run, confirm phone-side
+automation removal, preserve the password independently, monitor SSD health,
+rehearse an application and VM recovery, and add another healthy independent
+backup plus verified offsite coverage. A larger NVMe destination and encrypted
+iCloud copy remain plans, not deployed protection.
 
 ## Skills demonstrated
 
-Linux service scheduling, Docker storage inventory, encrypted versioned
-backups, SSH automation, VM lifecycle management, kernel/SMART diagnosis,
-failure-aware retention, and honest recovery-status reporting.
+Linux disk identification, controlled filesystem migration, UUID-based mounts,
+systemd scheduling, Docker storage inventory, consistent database exports,
+VM lifecycle management, encrypted versioned backups, integrity checks,
+representative restore testing, and explicit coverage reporting.
