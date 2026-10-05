@@ -31,7 +31,7 @@ flowchart TD
     Host --> NE["node-exporter host metrics"]
     NE --> Prom["Prometheus"]
     Prom --> Grafana["Grafana Ubuntu Host Overview"]
-    Host --> Homarr["Homarr dashboard — setup in progress"]
+    Host --> Homarr["Homarr dashboard — working integrations"]
     Host --> Backup["Encrypted Restic backups — daily at 3 AM"]
     Backup --> SSD1["SSD1 ext4 repository — integrity and sample restores verified"]
 ```
@@ -51,6 +51,8 @@ flowchart TD
 | node-exporter | Ubuntu host metrics | Host CPU, memory, filesystem, network, and uptime telemetry |
 | Prometheus | Metrics collection and querying | Scrapes node-exporter for host monitoring |
 | Grafana | Host monitoring dashboards | Working Ubuntu Host Overview dashboard |
+| Homarr | Central service dashboard | Working dashboard access and confirmed integrations |
+| Wazuh | SIEM and endpoint telemetry | Deployed for security monitoring |
 
 ## Security decisions
 
@@ -122,17 +124,13 @@ probes, delivered alert notifications, centralized logs, and a simulated
 security incident remain future work. See the
 [monitoring and log-detection project](docs/grafana-monitoring-detection.md).
 
-### 9. Homarr dashboard setup (in progress)
+### 9. Working Homarr dashboard and integrations
 
-Installed Homarr to create a central dashboard for navigating the homelab's
-services. Initial work has focused on account access and locating the existing
-credential configuration while troubleshooting login.
-
-The next milestone is to organize service links and validate integrations for
-the lab's applications and monitoring tools. Installation is recorded as
-progress; successful login, completed integrations, and dashboard coverage
-remain to be verified. Credentials and credential files are excluded from
-public documentation.
+Installed Homarr as a central dashboard for navigating the homelab's services.
+Dashboard access and service links are working, and Homarr integrations are
+configured and confirmed working. These milestones were confirmed on
+October 5, 2026. Credentials and credential files are excluded from public
+documentation.
 
 ### 10. Verified encrypted daily SSD backups
 
@@ -195,10 +193,11 @@ exclusions, restore instructions, and remaining work.
 - [ ] Add an encrypted VIKI offsite copy in iCloud and verify restoration
 
 - [x] Install Homarr for a central homelab dashboard
-- [ ] Verify Homarr login and organize service links
-- [ ] Configure and validate Homarr integrations
+- [x] Verify Homarr login and organize service links
+- [x] Configure and validate Homarr integrations
 
-- [ ] Add a UPS and automatic graceful shutdown
+- [x] Add a UPS for backup power
+- [ ] Configure and test automatic graceful shutdown on UPS battery power
 - [ ] Configure automated security updates and alerting
 - [x] Deploy Prometheus, node-exporter, and Grafana with a working Ubuntu host dashboard
 - [ ] Extend monitoring to DNS/app availability and validate alert delivery ([project guide](docs/grafana-monitoring-detection.md))
@@ -206,7 +205,7 @@ exclusions, restore instructions, and remaining work.
 - [ ] Configure automatic VM snapshot rotation
 - [x] Create a Windows VM with KVM and Cockpit
 - [ ] Document Windows VM networking and verify isolation before risky testing
-- [ ] Add Wazuh or another SIEM for endpoint telemetry
+- [x] Add Wazuh for endpoint telemetry
 - [ ] Create detection rules and document a simulated incident
 - [ ] Test a full restore onto a clean virtual machine
 
