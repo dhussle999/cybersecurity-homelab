@@ -1,253 +1,100 @@
-# VIKI — Secure Ubuntu Homelab
+# VIKI — My Cybersecurity Homelab
 
-![Status](https://img.shields.io/badge/status-active-success)
-![Platform](https://img.shields.io/badge/platform-Ubuntu-E95420)
-![Focus](https://img.shields.io/badge/focus-cybersecurity-blue)
+I'm building VIKI to get hands-on experience with Linux, networking, and
+cybersecurity. This repo is where I keep track of what I've installed, what
+I've learned, and what I'm still working on.
 
-This repository documents a 24/7 Ubuntu homelab built to develop practical
-skills in Linux administration, Docker, network security, automation, secure
-remote access, and recovery planning.
+## Tools and services I'm learning with
 
-> Security note: Public documentation uses example addresses and sanitized
-> configuration. Credentials, tokens, private IP addresses, device identifiers,
-> claim codes, and personal data are never committed.
+| Tool or service | What I use it for |
+| --- | --- |
+| Ubuntu | Linux administration |
+| Docker and Portainer | Running and managing applications |
+| Plex | Personal media |
+| AdGuard Home | DNS filtering |
+| Tailscale | Remote access |
+| KVM / libvirt and Cockpit | Virtual machines and host management |
+| Prometheus and node-exporter | Collecting and exploring metrics |
+| Grafana | Monitoring dashboards |
+| Homarr | Organizing service links and integrations |
+| Wazuh | Security monitoring |
+| OPNsense | Firewall and routing practice; configuration and testing in progress |
+| Wireshark | Capturing and inspecting network traffic |
 
-## Current architecture
+Installing a tool is my starting point. I'm using these projects to understand
+how the tools work and how to troubleshoot them.
 
-```mermaid
-flowchart TD
-    Internet --> Router["Home router"]
-    Router --> Host["VIKI Ubuntu server"]
-    Remote["Authorized remote devices"] --> TS["Tailscale encrypted network"]
-    TS --> Host
-    Host --> Docker["Docker Engine"]
-    Docker --> Plex["Plex"]
-    Docker --> AdGuard["AdGuard Home"]
-    Docker --> Portainer["Portainer"]
-    Host --> KVM["KVM / libvirt"]
-    KVM --> Windows["Windows VM"]
-    Host --> Cockpit["Cockpit virtual-machine management"]
-    Cockpit --> KVM
-    Host --> NE["node-exporter host metrics"]
-    NE --> Prom["Prometheus"]
-    Prom --> Grafana["Grafana Ubuntu Host Overview"]
-    Host --> Homarr["Homarr dashboard — working integrations"]
-    Host --> Backup["Encrypted Restic backups — daily at 3 AM"]
-    Backup --> SSD1["SSD1 ext4 repository — integrity and sample restores verified"]
-```
+## What I've been working on
 
-## Implemented services
+### Linux and self-hosting
 
-| Service | Purpose | Primary control |
-| --- | --- | --- |
-| Ubuntu | Bare-metal server platform | Regular patching and least privilege |
-| Docker | Isolated application deployment | Persistent volumes and controlled ports |
-| Plex | Personal media management | Authenticated access and restricted storage mounts |
-| AdGuard Home | Network DNS filtering | Local network exposure and controlled administration |
-| Portainer | Container administration | Strong authentication and private access |
-| Tailscale | Remote administration | Identity-based encrypted connectivity |
-| KVM / libvirt | Windows VM virtualization | VM lifecycle managed on Ubuntu |
-| Cockpit / cockpit-machines | Browser-based VM management | Authenticated administrative access |
-| node-exporter | Ubuntu host metrics | Host CPU, memory, filesystem, network, and uptime telemetry |
-| Prometheus | Metrics collection and querying | Scrapes node-exporter for host monitoring |
-| Grafana | Host monitoring dashboards | Working Ubuntu Host Overview dashboard |
-| Homarr | Central service dashboard | Working dashboard access and confirmed integrations |
-| Wazuh | SIEM and endpoint telemetry | Deployed for security monitoring |
+I've installed and managed applications, worked with persistent data, and
+practiced routine administration. Running services I actually use gives me
+problems to work through and a reason to keep learning.
 
-## Security decisions
+### Virtual machines
 
-- Administrative services are reached through Tailscale instead of arbitrary
-  public port forwarding.
-- Application data is stored in persistent Docker volumes or explicit bind
-  mounts so containers can be recreated safely.
-- Backup media is kept on a different physical device from the Ubuntu system
-  disk.
-- Destructive automation starts with preview and confirmation controls.
-- Secrets are excluded from Git through `.gitignore` and manual review.
-- Future malware-analysis workloads will run in isolated virtual machines with
-  no trusted LAN access.
+I created a Windows VM and started learning VM management. I still need to
+finish documenting and testing its networking.
 
-## Projects demonstrated
+### Monitoring
 
-### 1. Containerized service deployment
+I got my host monitoring dashboard working and fixed blank panels along the
+way. I've also set up Wazuh and Homarr. I still want to build out alerting and
+document a complete investigation exercise.
 
-Deployed and maintained multiple services with Docker, persistent storage,
-restart policies, and purpose-specific network exposure.
+### Networking — in progress
 
-### 2. Secure remote administration
+I installed OPNsense and a managed switch to practice network segmentation
+and firewall configuration. This project is still in progress.
 
-Configured Tailscale so approved devices can administer the server without
-exposing SSH and management dashboards directly to the internet.
+I've been learning about VLANs, switching, access ports, trunks, and PVIDs.
+I'm still working on routing and checking that the configuration behaves
+the way I intended.
 
-### 3. DNS filtering
+See [my VLAN and switching notes](docs/vlan-switching-progress.md).
 
-Deployed AdGuard Home as a network DNS service and validated that client DNS
-traffic reached the filtering server.
+### Packet inspection
 
-### 4. Gmail API automation
+I installed Wireshark and captured traffic while opening a web page. I stopped
+the capture and looked through individual packets to start understanding what
+happens when I browse. I haven't documented specific protocol findings yet.
 
-Developed a Python workflow using OAuth 2.0 and the Gmail API. The program
-paginates through message results, categorizes unread mail by age, previews the
-impact, and performs batched label modifications.
+### Troubleshooting
 
-### 5. Windows virtualization with KVM and Cockpit
+I've worked through performance and configuration problems instead of assuming
+the first setup would work. One of my projects involved investigating a CPU
+performance issue and checking the results after a firmware update.
 
-Installed KVM/libvirt and Cockpit with the virtual-machines extension on the
-Ubuntu host, then created a Windows VM. This lets the host keep running its
-Docker services while providing a separate Windows learning environment.
-VM network isolation and guest configuration are still to be documented.
+### Automation and recovery
 
-### 6. CPU clock troubleshooting and BIOS recovery
+I've practiced scripting repetitive tasks and checking backup integrity and
+sample restores. I'm still working toward complete recovery testing.
 
-Investigated an Intel Core Ultra 5 250K Plus stuck near 400 MHz even under
-load. Checked temperatures and CPU telemetry, then updated the Gigabyte
-B860 DS3H WIFI6E rev. 1.0 BIOS with Q-Flash. A repeat load test showed
-approximately 4.6–5.1 GHz at 100% busy. See
-[the troubleshooting record](docs/cpu-bios-troubleshooting.md) for evidence
-and steps.
+## What I've learned so far
 
-### 7. Migration backup planning
+- Installing something and understanding it are different milestones.
+- An unmanaged switch forwards frames using learned MAC addresses; it isn't
+  just a repeater.
+- VLANs can separate wired devices as well as wireless clients.
+- Separate physical ports don't automatically mean isolated networks.
+- I need to test a configuration instead of assuming it works.
+- A successful backup job doesn't prove a complete recovery will work.
+- Troubleshooting is easier when I record what changed and compare results.
 
-Created a Bash workflow that inventories the system, pauses containers for a
-consistent data snapshot, backs up volumes and bind mounts, restarts services,
-copies media, and generates SHA-256 checksums.
+## What I'm working toward
 
-### 8. Ubuntu host monitoring with Grafana and Prometheus
+- Finish my network segmentation project and document the test results.
+- Get more comfortable reading packet captures.
+- Build and test useful alerts.
+- Document a security investigation from the initial alert through the outcome.
+- Test full application and VM recovery.
+- Keep improving my notes as I learn.
 
-Deployed Grafana, Prometheus, and node-exporter through Docker and brought the
-Ubuntu Host Overview dashboard online. The dashboard displays CPU usage,
-memory, filesystem usage, network traffic, uptime, load, and exporter health.
-Troubleshot initially blank dashboard panels until host metrics displayed.
+## About these notes
 
-This completes the initial host monitoring milestone. Service availability
-probes, delivered alert notifications, centralized logs, and a simulated
-security incident remain future work. See the
-[monitoring and log-detection project](docs/grafana-monitoring-detection.md).
+I keep this overview general and leave out specific network assignments,
+addresses, hardware layouts, backup schedules, and detailed security settings.
+Work in progress stays marked as work in progress.
 
-### 9. Working Homarr dashboard and integrations
-
-Installed Homarr as a central dashboard for navigating the homelab's services.
-Dashboard access and service links are working, and Homarr integrations are
-configured and confirmed working. These milestones were confirmed on
-October 5, 2026. Credentials and credential files are excluded from public
-documentation.
-
-### 10. Verified encrypted daily SSD backups
-
-Migrated the unfinished phone backup destination to SSD1 after identifying the
-physical disk and partition, checking dependencies and capacity, obtaining
-explicit erase confirmation, and completing an extended SMART test. The
-existing main partition now uses ext4 and mounts at /mnt/viki-backup by UUID.
-The existing systemd service and timer run daily at 03:00 America/Chicago.
-
-The initial encrypted repository used approximately 32 GiB, leaving about
-184 GiB available. Retention keeps 7 daily, 4 weekly, and 2 monthly snapshots
-per backup group. Integrity checks read all repository data, and seven
-representative restores matched their recorded hashes. A missing-disk test
-proved that jobs refuse to write when the expected destination is absent.
-
-Coverage includes application configuration, Compose files, persistent app
-data, Home Assistant, personal files, and Windows VM storage and definitions.
-Databases are captured while applications are stopped, with an additional
-Immich PostgreSQL logical dump. VM disks are copied only while shut down.
-The failing second drive remains excluded. SSD1 passed its extended test but
-retains historical errors, so independent backup coverage remains important.
-
-Server-side phone-transfer access was retired after SSD verification; removal
-of the phone-side schedule is not confirmed. Previous backups are preserved
-for potentially unique older files. This is local file/application backup,
-not a bare-metal image or a complete 3-2-1 setup. Application recovery, VM boot
-verification, and the first unattended SSD run remain to be tested.
-
-See [the backup and recovery record](docs/viki-backup-recovery.md) for scope,
-exclusions, restore instructions, and remaining work.
-
-### 11. VLAN segmentation and managed switching — in progress
-
-Installed a NETGEAR GS308E managed switch and OPNsense in the Ubuntu/KVM
-environment. The current project targets three VLANs: VIKI services, an
-AP/wireless lab network, and a separate malware-learning network. Internet
-routing through OPNsense and validation of firewall isolation remain in progress.
-
-Documented lessons on switching, broadcast domains, access ports, trunks,
-PVIDs, and the role of OPNsense in controlling routed traffic. Also installed
-Wireshark and began inspecting packets captured while browsing.
-
-See [the VLAN and switching progress record](docs/vlan-switching-progress.md)
-for current status, intended policy, and pending validation.
-
-## Lessons learned
-
-- Container deletion is harmless only when important state is stored outside
-  the disposable container layer.
-- A backup is not trustworthy until its contents and checksums are verified.
-- DNS services require careful IP-address planning because every client depends
-  on their availability.
-- Private overlay networking simplifies remote administration while reducing
-  exposure to unsolicited internet traffic.
-- Automation that can delete data needs safe defaults and an explicit execution
-  boundary.
-- Check actual frequency under load before assuming a slow UI is caused by
-  software; compare measurements before and after a firmware change.
-
-## Roadmap
-
-- [x] Install the managed switch and begin VLAN/switching practice
-- [x] Install OPNsense in the Ubuntu/KVM lab
-- [x] Install Wireshark and begin packet inspection
-- [ ] Complete and document VIKI, AP, and malware-lab VLAN configuration
-- [ ] Verify internet routing through OPNsense and test permitted/denied traffic
-
-- [x] Complete an encrypted server backup and enable the daily systemd timer
-- [x] Configure and validate the Windows QEMU guest agent
-- [x] Diagnose the failing legacy HDD and exclude it from routine backups
-- [x] Migrate the backup destination to SSD1 with an explicit disk erase confirmation
-- [x] Verify full repository integrity and seven representative file restores
-- [x] Validate missing-disk refusal and configure retention with pruning previews
-- [x] Retire server-side phone-transfer access after SSD verification
-- [ ] Observe the first unattended SSD backup and confirm phone-side schedule removal
-- [ ] Preserve the password independently and review old phone backups for unique files
-- [ ] Test full application recovery and a restored VM boot
-- [ ] Monitor SSD1 health and establish another healthy independent backup
-- [ ] Add a 1 TB NVMe as a parallel local backup destination
-- [ ] Add an encrypted VIKI offsite copy in iCloud and verify restoration
-
-- [x] Install Homarr for a central homelab dashboard
-- [x] Verify Homarr login and organize service links
-- [x] Configure and validate Homarr integrations
-
-- [x] Add a UPS for backup power
-- [ ] Configure and test automatic graceful shutdown on UPS battery power
-- [ ] Configure automated security updates and alerting
-- [x] Deploy Prometheus, node-exporter, and Grafana with a working Ubuntu host dashboard
-- [ ] Extend monitoring to DNS/app availability and validate alert delivery ([project guide](docs/grafana-monitoring-detection.md))
-- [ ] Add centralized logs and validate an SSH-failure detection exercise
-- [ ] Configure automatic VM snapshot rotation
-- [x] Create a Windows VM with KVM and Cockpit
-- [ ] Document Windows VM networking and verify isolation before risky testing
-- [x] Add Wazuh for endpoint telemetry
-- [ ] Create detection rules and document a simulated incident
-- [ ] Test a full restore onto a clean virtual machine
-
-## Repository map
-
-```text
-.
-├── README.md
-├── SECURITY.md
-├── docs
-│   ├── vlan-switching-progress.md
-│   ├── architecture.md
-│   ├── viki-backup-recovery.md
-│   ├── cpu-bios-troubleshooting.md
-│   ├── grafana-monitoring-detection.md
-│   └── portfolio-talking-points.md
-└── .gitignore
-```
-
-## Ethics
-
-This environment is used only with systems and accounts I own or have explicit
-authorization to test. Security experiments are designed to remain isolated
-from third-party systems and production networks.
-
+I only test systems and accounts I own or have explicit permission to use.
