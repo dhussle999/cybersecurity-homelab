@@ -162,6 +162,20 @@ verification, and the first unattended SSD run remain to be tested.
 See [the backup and recovery record](docs/viki-backup-recovery.md) for scope,
 exclusions, restore instructions, and remaining work.
 
+### 11. VLAN segmentation and managed switching — in progress
+
+Installed a NETGEAR GS308E managed switch and OPNsense in the Ubuntu/KVM
+environment. The current project targets three VLANs: VIKI services, an
+AP/wireless lab network, and a separate malware-learning network. Internet
+routing through OPNsense and validation of firewall isolation remain in progress.
+
+Documented lessons on switching, broadcast domains, access ports, trunks,
+PVIDs, and the role of OPNsense in controlling routed traffic. Also installed
+Wireshark and began inspecting packets captured while browsing.
+
+See [the VLAN and switching progress record](docs/vlan-switching-progress.md)
+for current status, intended policy, and pending validation.
+
 ## Lessons learned
 
 - Container deletion is harmless only when important state is stored outside
@@ -177,6 +191,12 @@ exclusions, restore instructions, and remaining work.
   software; compare measurements before and after a firmware change.
 
 ## Roadmap
+
+- [x] Install the managed switch and begin VLAN/switching practice
+- [x] Install OPNsense in the Ubuntu/KVM lab
+- [x] Install Wireshark and begin packet inspection
+- [ ] Complete and document VIKI, AP, and malware-lab VLAN configuration
+- [ ] Verify internet routing through OPNsense and test permitted/denied traffic
 
 - [x] Complete an encrypted server backup and enable the daily systemd timer
 - [x] Configure and validate the Windows QEMU guest agent
@@ -216,6 +236,7 @@ exclusions, restore instructions, and remaining work.
 ├── README.md
 ├── SECURITY.md
 ├── docs
+│   ├── vlan-switching-progress.md
 │   ├── architecture.md
 │   ├── viki-backup-recovery.md
 │   ├── cpu-bios-troubleshooting.md
