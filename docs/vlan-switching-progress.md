@@ -5,7 +5,18 @@ Status: In progress
 
 ## Objective
 
-Build a segmented network for VIKI and a separate security-learning environment.
+Build a segmented network with three intended VLANs on the managed switch:
+
+| Planned VLAN | Purpose | Status |
+| --- | --- | --- |
+| VIKI | Homelab server and services | In progress |
+| AP | Dedicated access point / wireless lab network | Planned within the current project |
+| Malware lab | Separate environment for authorized malware detection, monitoring, and remediation practice | Isolation not yet validated |
+
+These are functional names; final numeric VLAN IDs and port assignments still
+need confirmation. The AP management network and wireless client VLAN handling
+will be documented when the AP configuration is established.
+
 Use managed switching to assign devices to VLANs and OPNsense to control routed
 traffic between networks. The goal is to reduce opportunities for lateral
 movement while keeping authorized administration available.
