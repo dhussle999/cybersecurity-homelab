@@ -1,87 +1,63 @@
-# VLANs, managed switching, and OPNsense — progress record
+# My VLAN and switching project
 
 Updated: October 15, 2026  
 Status: In progress
 
-## Objective
+## What I'm working on
 
-Build a segmented network with three intended VLANs on the managed switch:
+I installed OPNsense and a managed switch to practice network segmentation
+and firewall configuration. This project is still in progress.
 
-| Planned VLAN | Purpose | Status |
-| --- | --- | --- |
-| VIKI | Homelab server and services | In progress |
-| AP | Dedicated access point / wireless lab network | Planned within the current project |
-| Malware lab | Separate environment for authorized malware detection, monitoring, and remediation practice | Isolation not yet validated |
+My goal is to understand how to separate network traffic, control communication
+between networks, and test whether my configuration works the way I intended.
 
-These are functional names; final numeric VLAN IDs and port assignments still
-need confirmation. The AP management network and wireless client VLAN handling
-will be documented when the AP configuration is established.
+## What I've done so far
 
-Use managed switching to assign devices to VLANs and OPNsense to control routed
-traffic between networks. The goal is to reduce opportunities for lateral
-movement while keeping authorized administration available.
+- Installed a managed switch and started learning its management interface
+  and VLAN settings.
+- Installed OPNsense in my lab. I'm still working on routing internet traffic
+  through it.
+- Started planning my network segmentation.
+- Installed Wireshark and practiced capturing traffic while opening a web page.
+  I stopped the capture and inspected individual packets to start understanding
+  what happens on the network when I browse. I haven't added specific protocol
+  findings or capture screenshots yet.
 
-## Current progress
+## What I've learned
 
-- Installed a NETGEAR GS308E managed switch and began working with switch
-  management, port assignments, and VLAN concepts.
-- Installed OPNsense in the Ubuntu/KVM lab environment. Configuring internet
-  traffic to pass through OPNsense is still in progress.
-- Began planning VLAN separation for VIKI and a dedicated learning PC.
-  Port 1 was identified for VIKI; port 8 and VLAN 10 were discussed for the
-  learning PC. These are planning references, not a verified running port map.
-- Installed Wireshark and practiced capturing traffic while opening a web page,
-  stopping the capture, and inspecting individual packets. Specific protocol
-  findings and capture evidence have not yet been documented.
+I originally thought an unmanaged switch was basically a repeater. I learned
+that it learns MAC addresses and forwards frames using its MAC address table.
+A managed switch gives me additional control over how traffic is organized.
 
-Progress here reflects hands-on work and learning reported by the lab owner.
-This record does not establish that VLAN isolation, firewall enforcement, or
-the complete OPNsense internet path has passed validation.
+I also learned that VLANs apply to wired devices, not just Wi-Fi. Plugging
+devices into different physical ports doesn't automatically isolate them.
 
-## What I learned about switching and VLANs
-
-| Concept | My understanding and practical use |
+| Concept | How I understand it now |
 | --- | --- |
-| Ethernet switching | A switch learns source MAC addresses and forwards frames according to its MAC address table. An unmanaged switch still performs switching; it is not simply a repeater. |
-| VLANs | VLANs create separate Layer 2 broadcast domains on shared switching hardware. They can separate wired devices as well as wireless clients. |
-| Managed switch ports | VLAN membership and handling of untagged traffic determine which network a connected device joins. Separate physical ports alone do not establish separate VLANs. |
-| Access-style port | A device-facing port commonly carries one VLAN untagged. The PVID classifies incoming untagged frames; egress membership and tagging also need to match the design. |
-| Trunk-style link | A link can carry multiple VLANs using 802.1Q tags. The switch and the connected firewall, host, or AP must agree on VLAN handling. |
-| OPNsense firewall | Routing provides a path between subnets; firewall rules decide which routed connections are allowed. VLAN separation needs an explicit traffic policy and testing. |
-| Same-VLAN traffic | Devices in the same VLAN can communicate through the switch without crossing the OPNsense inter-VLAN firewall. |
-| Virtualized firewall | The host bridges, virtual NICs, and physical uplinks must preserve the intended path so traffic does not bypass OPNsense. |
+| VLAN | A separate Layer 2 broadcast domain on shared switching hardware |
+| Access-style port | A device-facing port commonly carrying one VLAN untagged |
+| PVID | The VLAN used to classify incoming untagged frames |
+| Trunk-style link | A link carrying multiple VLANs using 802.1Q tags |
+| Routing and firewall rules | Routing provides a path between networks; firewall rules decide which routed connections are allowed |
+| Same-VLAN traffic | Devices can communicate through the switch without crossing an inter-VLAN firewall |
+| Virtualized networking | Bridges and virtual interfaces need to match the intended traffic path |
 
-The useful model for me is that the switch assigns devices to separate network
-areas, while OPNsense controls permitted movement between those areas when it
-routes their traffic.
+The way I picture it is that the switch puts devices into separate areas,
+and the firewall controls movement between those areas when it routes traffic.
+I still need to check the actual configuration instead of assuming the
+separation works just because I created VLANs.
 
-## Intended traffic policy — not yet validated
+## What I'm doing next
 
-- Keep the learning network separate from VIKI services and the trusted home LAN.
-- Permit administration only from explicitly authorized devices or networks.
-- Allow only the DNS, update, and other connectivity required for each exercise.
-- Keep risky testing disconnected until the intended containment is verified.
+- Finish the segmentation and routing configuration.
+- Check that devices receive the expected network settings.
+- Test connections that should be allowed and connections that should be blocked.
+- Compare my test results with firewall logs.
+- Repeat the main checks after a controlled restart.
+- Add sanitized screenshots and write down any problems I run into and how I fix them.
 
-The final VLAN IDs, subnet plan, switch membership, uplink tagging, and firewall
-rules still need to be recorded from the actual configuration.
+## Where I'm at now
 
-## Validation work remaining
-
-| Check | Evidence to record | Status |
-| --- | --- | --- |
-| Switch VLAN membership and PVIDs | Sanitized port/VLAN table | Pending |
-| Client addressing | Expected subnet, gateway, and DNS for each test device | Pending |
-| OPNsense internet path | Client routing details and matching firewall/interface observations | Pending |
-| Approved management access | Successful connection from an authorized source | Pending |
-| Denied cross-VLAN access | Failed connection attempts paired with relevant firewall logs | Pending |
-| No alternate path to trusted networks | Review host bridges, routing, and additional device interfaces | Pending |
-| Persistence | Repeat key checks after a controlled restart | Pending |
-
-Record observed results, including failures and fixes. Packet captures and
-screenshots should be reviewed and sanitized before publication.
-
-## Current outcome
-
-The managed switch, OPNsense installation, and initial Wireshark practice are
-part of the lab's current progress. The next milestone is a documented,
-tested traffic path and VLAN policy. Network isolation remains unverified.
+I've installed the tools and started learning how they work together.
+Routing and isolation testing are still in progress. I'll update these notes
+with actual results as I complete the checks.
