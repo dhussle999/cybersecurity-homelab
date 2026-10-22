@@ -31,7 +31,7 @@ flowchart LR
     L --> G
 ```
 
-Run Grafana OSS, Prometheus, Loki, Grafana Alloy, node-exporter, Blackbox exporter and, only if container resource panels are wanted, cAdvisor. Grafana is the single dashboard and alert interface. Prometheus stores numeric metrics, Loki stores selected logs, Alloy collects logs, and Blackbox exporter performs synthetic availability probes. Do not add Wazuh initially: a second telemetry pipeline would raise operational cost before these basic alerts and an investigation are proven. Revisit Wazuh later for endpoint inventory, integrity monitoring, and richer security correlation.
+Run Grafana OSS, Prometheus, Loki, Grafana Alloy, node-exporter, Blackbox exporter and, only if container resource panels are wanted, cAdvisor. Grafana is the single dashboard and alert interface. Prometheus stores numeric metrics, Loki stores selected logs, Alloy collects logs, and Blackbox exporter performs synthetic availability probes. The README now records Wazuh as deployed for endpoint telemetry. Inspect its existing coverage before adding log collection: do not deploy another Wazuh instance or introduce Loki/Alloy merely to duplicate a working alert path. Reuse Grafana/Prometheus/node-exporter for host metrics and any existing service probes, and evaluate existing Wazuh or Home Assistant coverage before choosing a log or notification path. The Loki/Alloy design below remains a proposal, not a deployment claim.
 
 Use the existing Docker deployment pattern and persistent volumes. Bind management UIs to localhost or a private/Tailscale interface; do not publish Prometheus, Loki, exporters, or Grafana to the public internet. Restrict Loki and Prometheus to the Docker monitoring network. Give log collectors only the minimum read permissions needed. Avoid a general Docker socket mount; if Docker discovery needs one, use a narrowly configured socket proxy. Prefer explicit, named targets at first.
 
@@ -90,6 +90,100 @@ Do not disconnect household DNS, restart services, or place a malware VM on the 
 - Track milestones separately: the working host dashboard is complete; service availability, delivered alerts, and the detection exercise require their own evidence before being marked complete. Call the project **centralized monitoring and log detection**; reserve **SIEM deployed** for a later, actually verified SIEM implementation.
 
 **Operational follow-up:** Set up automatic snapshot rotation for the Windows/lab VMs once the backup and recovery plan is verified. The user requested a reminder at the next homelab project.
+
+
+## Repository inspection — October 21, 2026
+
+**Result: documentation review completed; live validation blocked by host access.**
+The repository tree at commit `e0e8a39f1535e4848cf982fe858172c1f04dee81`
+contains documentation only. This review read this guide, README, SECURITY.md,
+and the architecture notes. No Compose files, Prometheus scrape/rule files,
+Grafana provisioning or dashboard exports, or deployed alert definitions are
+tracked. No open pull requests were present at inspection time.
+
+The execution environment had no configured VIKI SSH connection, Tailscale
+client, Docker client, or host-management connector. No VIKI endpoint was
+queried, no configuration was changed, and no test notification, probe failure,
+or SSH attempt was generated. A missing repository configuration does **not**
+mean that configuration is absent on VIKI.
+
+| Path | Evidence confirmed in this review | Remaining verification |
+| --- | --- | --- |
+| Host metrics | README and this guide record the working Ubuntu Host Overview milestone | Current scrape health, freshness, deployed versions, and host filesystem coverage |
+| Service availability | Guide specifies DNS and HTTP probes | Discover existing probes and targets on VIKI; verify client-facing behavior |
+| Host alerts | Guide specifies disk and exporter thresholds | Inspect active rules, pending/firing/resolved behavior, and missing-data handling |
+| Alert delivery | Guide requires contact-point test and receipt | Discover existing destination/routing; confirm receipt with the recipient |
+| Centralized logs | README records Wazuh deployed; guide proposes Loki/Alloy | Inspect existing collection and retention before adding a collector |
+| SSH exercise | Guide contains a safe procedure | No journal-to-alert-to-notification evidence was collected |
+| Privacy | SECURITY.md requires sanitized documentation only | Keep all live inspection output private; publish counts and redacted outcomes only |
+
+These are repository findings, not a new confirmation of service uptime.
+No real telemetry or synthetic test results were produced by this review.
+
+### Safest next step: inspect VIKI, then validate one path at a time
+
+Run the following sequence from an existing authorized VIKI administration
+session. Preserve working services and back up privately any configuration
+that must change. Discover actual container, job, unit, and contact-point names;
+do not substitute guessed names or publish raw configuration.
+
+1. **Inventory privately.** Inspect running containers, image versions,
+   Compose project/config locations, relevant mounts and networks, Prometheus
+   scrape/rule configuration, Grafana data sources/rules/contact points and
+   notification policies, and existing Wazuh/Home Assistant monitoring.
+   Avoid full environment dumps, rendered Compose output containing secrets,
+   raw logs, and notification URLs in public evidence. Check current retention
+   and private-only bindings. Do not install replacement components.
+2. **Verify real host telemetry read-only.** Confirm Prometheus readiness and
+   active targets, query `up` for the discovered node-exporter target, and
+   compare current sample timestamps with wall-clock time and the configured
+   scrape interval. Cross-check uptime and filesystem metrics against the
+   host, including the root filesystem and active backup mount. Ensure a
+   container filesystem is not being mistaken for the host. Review Grafana's
+   current query results and data-source errors.
+3. **Test the highest-value host alert safely.** Inspect the deployed disk
+   rule, exclusions, duration, routing, and No Data/Error policy. Test its
+   threshold and duration using isolated fixtures or a temporary rule labeled
+   as a test, with cleanup recorded. Never fill a disk, change a production
+   threshold, or stop node-exporter to force an alert. Check both sides of the
+   disk threshold and the pending-to-firing-to-resolved transition.
+   Separately check exporter failure and absent-series behavior; `up == 0`
+   cannot detect a target removed from configuration. Offline rule tests prove
+   logic only, not scraping, Grafana evaluation, or delivery.
+4. **Verify service paths without outages.** Reuse any existing probes. Check
+   AdGuard resolution with one fixed public test name and check selected app
+   routes from the actual monitoring network. Keep query histories and
+   addresses private. An exporter being `up` proves scrape reachability,
+   not application availability; an HTTP response alone does not prove
+   authenticated application use. If no probes exist, record that gap before
+   adding only the smallest needed probe to the existing stack.
+5. **Exercise a separate synthetic failure.** Use a dedicated local test
+   endpoint with a known successful response and a controlled failed response;
+   keep production DNS and applications running. Route a clearly labeled test
+   through the existing alert path. Verify its configured hold duration and
+   recovery notification, then remove the temporary target/rule and confirm
+   normal operation. Label all such evidence **synthetic availability test**;
+   do not describe it as a production outage.
+6. **Confirm delivery before the SSH exercise.** Discover the existing contact
+   point and any Home Assistant mobile notification action. Send a clearly
+   labeled test via the existing route, record send time privately, and ask
+   whether it arrived. A successful API response is not proof of receipt.
+   Confirm firing and resolved delivery separately; prevent duplicate routes.
+7. **Gate the SSH test on actual log coverage.** Verify which existing system
+   receives current SSH journal events before selecting the detection rule.
+   Count unique authentication failures: an invalid-user line and a
+   failed-password line may describe the same attempt. Validate the filter
+   against the host's actual format before interpreting five log lines as five
+   attempts. Follow the safe exercise above only once coverage and delivery
+   work. If using isolated synthetic logs, identify them explicitly and leave
+   real SSH collection unverified.
+
+For each completed test, publish only a sanitized record: test label, timestamp
+and timezone, real/synthetic classification, expected condition, observed count
+or state, firing and recovery times, delivery acknowledgment, cleanup result,
+and remaining limitation. Leave any unexecuted step **pending**. Do not publish
+infrastructure addresses, usernames, device identifiers, tokens, raw logs,
+configuration archives, browsing history, or personal media.
 
 ## References
 
