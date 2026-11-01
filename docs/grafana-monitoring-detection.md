@@ -185,6 +185,61 @@ and remaining limitation. Leave any unexecuted step **pending**. Do not publish
 infrastructure addresses, usernames, device identifiers, tokens, raw logs,
 configuration archives, browsing history, or personal media.
 
+## Validation access recheck — November 1, 2026 (America/Chicago)
+
+**Result: administration access remains unavailable; no live validation completed.**
+
+The GitHub review confirmed that `main` still pointed to
+`0a058681692f3e28fdf6b741f82217c37b473247` before this update. The
+repository remains documentation only, with no tracked deployed scrape,
+probe, alert, or notification configuration. README records Wazuh as deployed;
+that historical deployment record does not establish current collection or
+delivery health.
+
+This execution environment has an SSH client, but no user SSH configuration,
+known-hosts file, standard RSA/Ed25519 identity files, SSH agent, or active SSH
+session. Tailscale and Docker clients and their usual local sockets are absent;
+no Docker remote/context environment setting or host-management tool is
+available. These checks describe this execution environment only. They do not
+establish whether VIKI or any service is online or offline. No VIKI endpoint was
+queried and no credentials were requested or published.
+
+| Verification path | November 1 result | Evidence still needed from VIKI |
+| --- | --- | --- |
+| Prometheus / node-exporter / Grafana | Not executed; access blocked | Ready endpoint, active-target health, fresh samples, host/mount cross-check, current Grafana query results |
+| DNS and application probes | Not executed; access blocked | Existing probe inventory, recent results, and checks from the monitoring network |
+| Disk / exporter alert rules and routing | Not executed; access blocked | Actual expressions, durations, evaluation state, missing-data behavior, and destination policy |
+| Wazuh log and SSH coverage | Not executed; access blocked | Active collection sources, recent received SSH events, applicable rules, retention, and forwarding coverage |
+| Home Assistant notifications | Not executed; access blocked | Existing automations/scripts, exact mobile notification action, route ownership, recent traces, and recipient acknowledgment |
+| SSH detection exercise | Not executed; prerequisites unverified | Verified source-to-rule-to-route coverage before any exercise |
+
+**Next administration session:** run the existing validation sequence above
+from Codex on VIKI or an already SSH-connected administration computer.
+Start with read-only inventory and current telemetry; do not install anything
+to overcome this environment's access limitation.
+
+Before choosing a log or notification implementation, inspect Wazuh's active
+agent/local collection configuration, agent connectivity where applicable,
+recent event timestamps, SSH decoder/rule matches, and any integrations that
+forward alerts. Inspect Home Assistant's existing service/backup/host alert
+automations, trigger conditions, execution traces, and notification scripts.
+Compare which component detects each condition and which delivers it; reuse
+working paths and record uncovered conditions explicitly. Do not export raw
+Wazuh events, Home Assistant traces, receiver settings, or credential-bearing
+configuration into this repository.
+
+Read-only rule/configuration review can establish what is configured, and
+recent telemetry can establish what was observed during the recorded window.
+Neither proves future alert behavior or phone delivery. Leave receipt
+unconfirmed until the recipient acknowledges a clearly labeled test through
+the discovered existing route. Keep firing and recovery results separate.
+
+**Changes and test classification:** documentation only. No collector was
+installed, no VIKI configuration was changed, no notification was sent, and no
+probe failure, synthetic log, or SSH login attempt was generated. No production
+incident or successful end-to-end alert test is claimed. All live verification
+items remain pending.
+
 ## References
 
 - [Prometheus node-exporter guide](https://prometheus.io/docs/guides/node-exporter/)
